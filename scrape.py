@@ -36,7 +36,7 @@ def login(driver):
     except Exception as e:
         return 0
 
-def scrape_users(driver, index = 0):
+def scrape_users(driver, log_data):
     people_button = driver.find_element(By.XPATH, '//button[@aria-label="People"]')
     people_button.click()
 
@@ -49,14 +49,14 @@ def scrape_users(driver, index = 0):
         EC.visibility_of_element_located((By.CSS_SELECTOR, "div.zNwRz"))
     )
 
-    driver.execute_script("arguments[0].scrollTop += arguments[0].offsetHeight * arguments[1];", scroll_panel, round(index/6.92))
+    driver.execute_script("arguments[0].scrollTop += arguments[1];", scroll_panel, log_data['scroll_position'])
 
-    count = index
-    page_index = round(index/6.92)
+    count = log_data['count']
+    page_index = log_data['page_index']
     while page_index < 99999:
         
         try:
-            if page_index % 100 == 0:
+            if page_index % 100 == 0 and page_index != 0:
                 driver.execute_script("caches.keys().then(function(names) { for (let name of names) { caches.delete(name); } });")
                 # driver.delete_all_cookies()
                 organize_outlook(page_index)
@@ -99,8 +99,17 @@ def scrape_users(driver, index = 0):
 
 
                     count += 1
-                    with open("run.log", "w") as f:
-                        f.write(str(count))
+                    scroll_position = driver.execute_script("return arguments[0].scrollTop;", scroll_panel)
+                    with open("log.json", "w") as f:
+                        json.dump(
+                            {
+                                'count': count, 
+                                'scroll_position': scroll_position, 
+                                'page_index': page_index
+                            }, 
+                            f, 
+                            indent= 4
+                        )
                 
                 except Exception as e:
                     pass
@@ -114,13 +123,17 @@ def scrape_users(driver, index = 0):
             return
 
 try:
-    with open("run.log", "r") as f:
-        current = int(f.read())
+    with open("log.json", "r") as f:
+        log_data = json.load(f)
 except Exception as e:
-    current = 0
+    log_data = {
+        'count': 0, 
+        'scroll_position': 0, 
+        'page_index': 0
+    }
     
-print(current)
+print(log_data)
     
 driver = init()
 if login(driver):
-    scrape_users(driver, current)
+    scrape_users(driver, log_data)
