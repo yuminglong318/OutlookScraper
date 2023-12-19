@@ -113,9 +113,13 @@ def scrape_users(driver, index = 0):
             organize_outlook(page_index)
             return
 
-with open("run.log", "r") as f:
-    current = int(f.read())
-    print(current)
+try:
+    with open("run.log", "r") as f:
+        current = int(f.read())
+except Exception as e:
+    current = 0
+    
+print(current)
     
 driver = init()
 if login(driver):
