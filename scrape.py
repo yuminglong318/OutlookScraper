@@ -119,6 +119,7 @@ def scrape_users(driver, log_data):
             page_index += 1
 
         except Exception as e:
+            print(e)
             organize_outlook(page_index)
             return
 
